@@ -1,5 +1,5 @@
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from openai import OpenAI
 import os
@@ -8,8 +8,15 @@ client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY")
 )
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='build', static_url_path='')
 CORS(app)
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/generate-text', methods=['POST'])
 def generate_text():
@@ -34,4 +41,4 @@ def generate_text():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)

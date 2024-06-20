@@ -21,7 +21,8 @@ function TextEditor() {
     };
 
     const handleMagicWrite = () => {
-      fetch('http://localhost:5000/generate-text', {
+    //   fetch('http://localhost:5000/generate-text', {
+      fetch('https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text', {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
