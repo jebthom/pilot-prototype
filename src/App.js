@@ -4,7 +4,11 @@ import './App.css';
 function TextEditor() {
     const [text, setText] = useState('');
     const [cursorPosition, setCursorPosition] = useState(0);
-    const [condition, setCondition] = useState('condition3');
+    const conditions = ['condition1', 'condition2', 'condition3'];
+    const [condition, setCondition] = useState(() => {
+        const randomIndex = Math.floor(Math.random() * conditions.length);
+        return conditions[randomIndex];
+    });
 
     const handleTextChange = (event) => {
         setText(event.target.value);
