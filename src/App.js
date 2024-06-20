@@ -54,6 +54,7 @@ function TextEditor() {
                 onChange={handleTextChange}
                 onClick={handleTextChange}
                 onKeyUp={handleTextChange}
+                placeholder='Start typing here...'
             />
             <div className='ai-area'>
                 {renderAIComponent(condition, handleMagicWrite, cursorPosition, text)}
@@ -84,6 +85,7 @@ function DefaultComponent({ onMagicWrite }) {
 
   return (
       <div>
+          <p>Select the tone of your text, and the Autowrite tool will continue your text from the current cursor location.</p>
           <button onClick={onMagicWrite}>Autowrite</button>
           <div>
               <label htmlFor="tone-dropdown">Tone: </label>
@@ -100,6 +102,7 @@ function DefaultComponent({ onMagicWrite }) {
 function ComponentForCondition2({ onMagicWrite }) {
   return (
       <div>
+          <p>Magic Write will magically match your tone and continue your text from the current cursor location.</p>
           <button onClick={onMagicWrite}>Magic Write</button>
       </div>
   );
@@ -151,6 +154,7 @@ function ComponentForCondition3({ cursorPosition, text, onMagicWrite }) {
               value={input}
               onChange={handleInputChange}
               className="chat-input"
+              placeholder='Chat not implemented. Use suggestion.'
           />
           <button onClick={handleSubmit}>Send</button>
       </div>
