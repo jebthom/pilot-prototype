@@ -5,7 +5,6 @@ from openai import OpenAI
 import os
 
 client = OpenAI(
-    base_url='http://localhost:11434/v1/',
     api_key=os.environ.get("OPENAI_API_KEY")
 )
 
@@ -21,8 +20,8 @@ def generate_text():
 
     try:
         response = client.chat.completions.create(
-            # model="gpt-3.5-turbo",
-            model='llama3',
+            model="gpt-3.5-turbo",
+            # model='llama3',
             messages=[
                 {"role": "system", "content": "Suggest a continuation for this prompt. Your reply should only be the continuation. The continuation should be grammatically correct and flow naturally from the prompt."},
                 {"role": "user", "content": context_text}
