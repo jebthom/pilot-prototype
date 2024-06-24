@@ -122,3 +122,29 @@
   animation-duration: 3s;
   animation-fill-mode: forwards; /* Keeps the text black after the animation completes */
 }
+
+.magic-button {
+  padding: 8px 8px;   /* Add padding to ensure the icon and text fit well */
+  background-color: mediumpurple ; 
+  border: 1px solid #ccc; /* Subtle border */
+  border-radius: 1px;   /* Rounded corners */
+  cursor: pointer;   /* Pointer cursor on hover */
+  display: inline-flex;   /* Flexbox for aligning the icon and text */
+  align-items: center;   /* Vertical alignment */
+  justify-content: center; /* Horizontal alignment */
+}
+
+.magic-button:hover {
+  background-color: #772dd2; /* Slightly darker on hover */
+}
+
+.icon-quill {
+  margin-right: 8px; /* Space between the icon and any text/other elements */
+  width: 24px; /* Width of the icon */
+  height: 24px; /* Height of the icon */
+}
+
+.button-text {
+  color: white;
+  font-family: 'Brush Script MT', cursive;
+}

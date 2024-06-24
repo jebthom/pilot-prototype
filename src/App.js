@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import DOMPurify from 'dompurify';
 import Sparkles from './Sparkles';
+import { ReactComponent as QuillIcon } from './assets/quill.svg';
 import './App.css';
 
 
@@ -234,7 +235,9 @@ function ComponentForCondition2({ onMagicWrite }) {
       <div>
           <p>Magic Write will magically match your tone and continue your text.</p>
           <Sparkles>
-            <button onClick={onMagicWrite}>Magic Write</button>
+            <button onClick={onMagicWrite} className='magic-button'>
+                <QuillIcon className="icon-quill" />
+            </button>
           </Sparkles>
       </div>
   );
