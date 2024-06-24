@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import ReactQuill from 'react-quill';
+import ReactQuill, { Quill } from 'react-quill';
 import './App.css';
 import 'react-quill/dist/quill.snow.css'; // Include the Quill CSS
 
@@ -15,6 +15,23 @@ function TextEditor() {
     });
     const quillRef = useRef(null);
     
+    const Inline = Quill.import('blots/inline');
+
+    class FadeInBlot extends Inline {
+    static create(value) {
+        let node = super.create();
+        node.setAttribute('id', value);
+        node.setAttribute('style', 'color: rgba(0,0,0,0); transition: color 3s;');
+        return node;
+    }
+
+    static formats(node) {
+        return node.getAttribute('id');
+    }
+    }
+    FadeInBlot.blotName = 'fadeIn';
+    FadeInBlot.tagName = 'span';
+    Quill.register(FadeInBlot);
 
     const handleTextChange = (content, delta, source, editor) => {
         setText(content);
@@ -73,8 +90,6 @@ function TextEditor() {
 
     const handleMagicWrite = () => {
         if (cursorPosition !== null) {
-            // Adjusting the cursor position by +3 to account for non-visible formatting characters
-            // that are not reflected in the plain text cursor index.
             const adjustedPosition = cursorPosition + 3;
             fetch('https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text', {
                 method: 'POST',
@@ -88,29 +103,35 @@ function TextEditor() {
             })
             .then(response => response.json())
             .then(data => {
-                const newText = insertTextAtPosition(text, data.response, adjustedPosition);
-                setText(newText);
-                // Set cursor position after ensuring the state update has rendered
-                setTimeout(() => {
-                    if (quillRef.current) {
-                        const editor = quillRef.current.getEditor();
-                        const newCursorPosition = adjustedPosition + data.response.length;
-                        console.log('Setting cursor position to:', newCursorPosition); // Debug log
-                        editor.setSelection(newCursorPosition - 2, 0);
-                    } else {
-                        console.log('Editor not available');
+                if (quillRef.current) {
+                    const editor = quillRef.current.getEditor();
+                    const range = editor.getSelection();
+                    if (range) {
+                        const id = 'fade-in-' + Date.now();
+                        editor.insertText(range.index, data.response, 'fadeIn', id);
+                        setTimeout(() => {
+                            const insertedElement = editor.container.querySelector(`#${id}`);
+                            if (insertedElement) {
+                                insertedElement.style.color = 'rgba(0,0,0,1)';
+                                // Second timeout to remove the tag after the animation
+                                setTimeout(() => {
+                                    const textContent = insertedElement.textContent;
+                                    const parent = insertedElement.parentNode;
+                                    // Replace the span with its text content
+                                    parent.insertBefore(document.createTextNode(textContent), insertedElement);
+                                    parent.removeChild(insertedElement);
+    
+                                    // Optionally adjust cursor position here if needed
+                                    editor.setSelection(range.index + data.response.length, 0);
+                                }, 1500); // Assuming the animation duration is 3 seconds
+                            }
+                        }, 100); // Short delay to start the transition
                     }
-                }, 0); // Adjust timeout as necessary, testing with 0 (next event loop) to start
-                const quillContainer = document.querySelector('.custom-quill');
-                quillContainer.classList.add('fade-text');
-                setTimeout(() => {
-                    quillContainer.classList.remove('fade-text');
-                }, 3000); // Matches animation duration
+                }
             })
             .catch(error => console.error('Error:', error));
         }
     };
-
     const insertMagicTextAtPosition = (originalText, insertText, position) => {
         const beforeText = originalText.substring(0, position);
         const afterText = originalText.substring(position);
@@ -118,6 +139,27 @@ function TextEditor() {
         const animatedText = `<span class="fade-in-text">${insertText}</span>`;
         return beforeText + animatedText + afterText;
     };
+
+    const modules = {
+        toolbar: [
+            [{ 'header': [1, 2, false] }],
+            ['bold', 'italic', 'underline','strike', 'blockquote'],
+            [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+            ['link', 'image'],
+            ['clean']
+        ],
+        clipboard: {
+            matchVisual: false,
+        },
+    };
+    
+    const formats = [
+        'header',
+        'bold', 'italic', 'underline', 'strike', 'blockquote',
+        'list', 'bullet', 'indent',
+        'link', 'image',
+        'color', 'animation', 'fadeIn'
+    ];
 
     return (
         <div className='text-editor-container'>
@@ -129,6 +171,8 @@ function TextEditor() {
                 onChange={handleTextChange}
                 onChangeSelection={handleSelectionChange}
                 placeholder='Start typing here...'
+                modules={modules}
+                formats={formats}
             />
             <div className='ai-area'>
                 {renderAIComponent(condition, handleAutowrite, handleMagicWrite, text, selection)}
