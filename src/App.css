@@ -10,8 +10,8 @@
   box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Subtle shadow for depth */
 }
 
-/* Textarea styling enhancements NOT USED ANYMORE KEEP FOR REFERENCE*/
-.text-area {
+/* Textarea styling enhancements */
+.editor {
   flex: 3;
   margin-right: 20px;
   height: 90%;
@@ -24,26 +24,16 @@
   box-shadow: inset 0 0 5px rgba(0,0,0,0.05); /* Inner shadow for depth */
 }
 
-/* Quill Rich Text Editor styling */
-.custom-quill {
-  flex: 3;
-  height: 90%;
-  resize: none;
-  padding: 20px;
-
+.editor.placeholder::before {
+  content: attr(data-placeholder);
+  color: #aaa;
+  display: block;
+  pointer-events: none;
+  height: 0;
 }
 
-.custom-quill .ql-container {
-  height: 100%; /* Make sure the editor container fills the height */
-  padding: 0; /* Reset any internal padding if necessary */
-}
-
-.custom-quill .ql-editor {
-  height: 100%; /* Ensures the content area uses all available space */
-  padding: 20px; /* Text padding within the editor */
-  font-family: 'Helvetica', sans-serif; /* Optional: Adjust the font used */
-  font-size: 16px; /* Optional: Adjust the font size */
-  background-color: #fff;
+.editor:not(.placeholder)::before {
+  display: none;
 }
 
 /* AI area with distinct styling */

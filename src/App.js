@@ -1,194 +1,206 @@
-import React, { useState, useRef } from 'react';
-import ReactQuill, { Quill } from 'react-quill';
+import React, { useState, useRef, useEffect } from 'react';
+import DOMPurify from 'dompurify';
+import Sparkles from './Sparkles';
 import './App.css';
-import 'react-quill/dist/quill.snow.css'; // Include the Quill CSS
+
 
 function TextEditor() {
-    
-    const [text, setText] = useState('');
-    const [cursorPosition, setCursorPosition] = useState(0);
-    const [selection, setSelection] = useState(null);
+    const [text, setText] = useState("");
+    const editorRef = useRef(null);
+    const ignoreNextInput = useRef(false);
     const conditions = ['condition1', 'condition2', 'condition3'];
     const [condition, setCondition] = useState(() => {
         const randomIndex = Math.floor(Math.random() * conditions.length);
         return conditions[randomIndex];
     });
-    const quillRef = useRef(null);
-    
-    const Inline = Quill.import('blots/inline');
 
-    class FadeInBlot extends Inline {
-    static create(value) {
-        let node = super.create();
-        node.setAttribute('id', value);
-        node.setAttribute('style', 'color: rgba(0,0,0,0); transition: color 3s;');
-        return node;
-    }
+    useEffect(() => {
+        if (text.trim() === "") {
+            editorRef.current.classList.add("placeholder");
+        } else {
+            editorRef.current.classList.remove("placeholder");
+        }
+    }, []); // Empty dependency array to run only once on mount
 
-    static formats(node) {
-        return node.getAttribute('id');
-    }
-    }
-    FadeInBlot.blotName = 'fadeIn';
-    FadeInBlot.tagName = 'span';
-    Quill.register(FadeInBlot);
-
-    const handleTextChange = (content, delta, source, editor) => {
-        setText(content);
-        setSelection(editor.getSelection());
-        
-    };
-
-
-    const handleSelectionChange = (range, source, editor) => {
-        if (range) {
-            setCursorPosition(range.index);  // Update cursor position
+    const handleInput = (e) => {
+        if (!ignoreNextInput.current) {
+            setText(e.target.innerText);
+            if (e.target.innerText.trim() === "") {
+                editorRef.current.classList.add("placeholder");
+            } else {
+                editorRef.current.classList.remove("placeholder");
+            }
+        } else {
+            ignoreNextInput.current = false; // Reset for next updates
         }
     };
 
     const handleAutowrite = () => {
-        if (cursorPosition !== null) {
-            // Adjusting the cursor position by +3 to account for non-visible formatting characters
-            // that are not reflected in the plain text cursor index.
-            const adjustedPosition = cursorPosition + 3;
-            fetch('https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    text: text,
-                    cursorPosition: adjustedPosition
-                })
+        const safeText = DOMPurify.sanitize(text);
+        editorRef.current.classList.remove("placeholder");
+        const cursorPosition = safeText.length; // We'll pass the length of the text as the cursor position
+        fetch('https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: safeText,
+                cursorPosition: cursorPosition
             })
-            .then(response => response.json())
-            .then(data => {
-                const newText = insertTextAtPosition(text, data.response, adjustedPosition);
-                setText(newText);
-                // Set cursor position after ensuring the state update has rendered
-                setTimeout(() => {
-                    if (quillRef.current) {
-                        const editor = quillRef.current.getEditor();
-                        const newCursorPosition = adjustedPosition + data.response.length;
-                        editor.setSelection(newCursorPosition - 2, 0);
-                    } else {
-                        console.log('Editor not available');
-                    }
-                }, 0); // Adjust timeout as necessary, testing with 0 (next event loop) to start
-               
-            })
-            .catch(error => console.error('Error:', error));
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Combine text and new response
+            const newText = safeText + (safeText.endsWith(' ') ? '' : ' ') + data.response;
+            ignoreNextInput.current = true; // Ignore the next input event triggered by the manual update
+            setText(newText);
+            if (editorRef.current) {
+                editorRef.current.innerText = newText; // Manually update text
+                placeCaretAtEnd(editorRef.current); // Set caret at the end
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    };
+
+    function placeCaretAtEnd(el) {
+        el.focus();
+        if (typeof window.getSelection != "undefined"
+                && typeof document.createRange != "undefined") {
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
         }
-    };
-    
-    const insertTextAtPosition = (originalText, insertText, position) => {
-        const beforeText = originalText.substring(0, position);
-        const afterText = originalText.substring(position);
-        const spaceIfNeeded = position > 0 && originalText[position - 1] !== ' ' ? ' ' : '';
-        return beforeText + spaceIfNeeded + insertText + afterText;
-    };
+    }
 
     const handleMagicWrite = () => {
-        if (cursorPosition !== null) {
-            const adjustedPosition = cursorPosition + 3;
-            fetch('https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    text: text,
-                    cursorPosition: adjustedPosition
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (quillRef.current) {
-                    const editor = quillRef.current.getEditor();
-                    const range = editor.getSelection();
-                    if (range) {
-                        const id = 'fade-in-' + Date.now();
-                        editor.insertText(range.index, data.response, 'fadeIn', id);
-                        setTimeout(() => {
-                            const insertedElement = editor.container.querySelector(`#${id}`);
-                            if (insertedElement) {
-                                insertedElement.style.color = 'rgba(0,0,0,1)';
-                                // Second timeout to remove the tag after the animation
-                                setTimeout(() => {
-                                    const textContent = insertedElement.textContent;
-                                    const parent = insertedElement.parentNode;
-                                    // Replace the span with its text content
-                                    parent.insertBefore(document.createTextNode(textContent), insertedElement);
-                                    parent.removeChild(insertedElement);
+        editorRef.current.classList.remove("placeholder");
+        const apiURL = 'https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text';
+        // Need to use the innerText or else the checking for spacePrefix doesn't work reliably
+        const editorText = editorRef.current ? editorRef.current.innerText : ""; // Directly use the current editor text
+        const safeText = DOMPurify.sanitize(editorText);
+        const cursorPosition = safeText.length;
     
-                                    // Optionally adjust cursor position here if needed
-                                    editor.setSelection(range.index + data.response.length, 0);
-                                }, 1500); // Assuming the animation duration is 3 seconds
-                            }
-                        }, 100); // Short delay to start the transition
-                    }
-                }
+        fetch(apiURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: safeText,
+                cursorPosition: cursorPosition
             })
-            .catch(error => console.error('Error:', error));
-        }
-    };
-    const insertMagicTextAtPosition = (originalText, insertText, position) => {
-        const beforeText = originalText.substring(0, position);
-        const afterText = originalText.substring(position);
-        // Wrap the insertText in a span for animation
-        const animatedText = `<span class="fade-in-text">${insertText}</span>`;
-        return beforeText + animatedText + afterText;
+        })
+        .then(response => response.json())
+        .then(data => {
+            const endsWithSpace = /[\s\u00A0]$/.test(safeText);
+            const spacePrefix = endsWithSpace ? '' : ' ';
+            const newText = safeText + spacePrefix + data.response;
+    
+            // Update React state
+            setText(newText);
+    
+            // Append text with animation
+            const span = document.createElement('span');
+            span.className = 'fade-text';
+            span.textContent = spacePrefix + data.response;
+    
+            if (editorRef.current) {
+                editorRef.current.appendChild(span);
+                placeCaretAtEnd(editorRef.current);
+            }
+    
+            ignoreNextInput.current = true; // To ignore the next input event
+        })
+        .catch(error => console.error('Error:', error));
     };
 
-    const modules = {
-        toolbar: [
-            [{ 'header': [1, 2, false] }],
-            ['bold', 'italic', 'underline','strike', 'blockquote'],
-            [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-            ['link', 'image'],
-            ['clean']
-        ],
-        clipboard: {
-            matchVisual: false,
-        },
+    const handleAgentWrite = () => {
+        editorRef.current.classList.remove("placeholder");
+        const apiURL = 'https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text';
+        const cursorPosition = text.length;
+    
+        fetch(apiURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: text,
+                cursorPosition: cursorPosition
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const fullResponse = data.response;
+            const delay = 50; // milliseconds between "keystrokes"
+            typeText(fullResponse, delay);
+        })
+        .catch(error => console.error('Error:', error));
     };
     
-    const formats = [
-        'header',
-        'bold', 'italic', 'underline', 'strike', 'blockquote',
-        'list', 'bullet', 'indent',
-        'link', 'image',
-        'color', 'animation', 'fadeIn'
-    ];
+    function typeText(fullText, delay) {
+        // Use a regular expression to check for ending space characters
+        const currentText = editorRef.current.innerText;
+        let safeText = DOMPurify.sanitize(currentText);
+        // Match any space character including spaces, tabs, newlines, and no-break spaces
+        const endsWithSpace = /[\s\u00A0]$/.test(safeText);
+    
+        // Set shouldStartWithSpace true if there is text and it does not end with a space
+        const shouldStartWithSpace = safeText.length > 0 && !endsWithSpace;
+    
+        // Split the fullText into words based on spaces
+        const words = fullText.split(' ');
+        let currentWordIndex = 0;
+    
+        const intervalId = setInterval(() => {
+            if (currentWordIndex < words.length) {
+                const nextWord = words[currentWordIndex];
+    
+                // Add a space before the next word if it's not the first word or if starting with a space is needed
+                if (currentWordIndex > 0 || (currentWordIndex === 0 && shouldStartWithSpace)) {
+                    safeText += ' ';
+                }
+                safeText += nextWord;
+    
+                editorRef.current.innerText = safeText;
+                setText(editorRef.current.innerText); // Update React state to reflect current text
+                placeCaretAtEnd(editorRef.current); // Optionally keep the caret at the end
+    
+                currentWordIndex++; // Move to the next word
+            } else {
+                clearInterval(intervalId); // Stop the interval when done
+            }
+        }, delay);
+    }
 
     return (
-        <div className='text-editor-container'>
-            <ReactQuill
-                className='custom-quill'
-                ref={quillRef}
-                theme="snow"
-                value={text}
-                onChange={handleTextChange}
-                onChangeSelection={handleSelectionChange}
-                placeholder='Start typing here...'
-                modules={modules}
-                formats={formats}
+        <div className="text-editor-container">
+            <div
+                ref={editorRef}
+                contentEditable
+                onInput={handleInput}
+                className="editor"
+                data-placeholder="Start typing here..."
             />
             <div className='ai-area'>
-                {renderAIComponent(condition, handleAutowrite, handleMagicWrite, text, selection)}
+                {renderAIComponent(condition, handleAutowrite, handleMagicWrite, handleAgentWrite, text)}
             </div>
         </div>
     );
 }
 
-function renderAIComponent(condition, handleAutowrite, handleMagicWrite, cursorPosition, text) {
+function renderAIComponent(condition, handleAutowrite, handleMagicWrite, handleAgentWrite, text) {
     switch (condition) {
         case 'condition1':
             return <DefaultComponent onAutowrite={handleAutowrite} />;
         case 'condition2':
             return <ComponentForCondition2 onMagicWrite={handleMagicWrite} />;
         case 'condition3':
-            return <ComponentForCondition3 cursorPosition={cursorPosition} text={text} onMagicWrite={handleMagicWrite} />;
+            return <ComponentForCondition3 text={text} onAgentWrite={handleAgentWrite} />;
         default:
             return <DefaultComponent onAutowrite={handleAutowrite} />;
     }
@@ -203,7 +215,7 @@ function DefaultComponent({ onAutowrite }) {
 
   return (
       <div>
-          <p>Select the tone of your text, and the Autowrite tool will continue your text from the current cursor location.</p>
+          <p>Select the tone of your text, and the Autowrite tool will continue your text.</p>
           <button onClick={onAutowrite}>Autowrite</button>
           <div>
               <label htmlFor="tone-dropdown">Tone: </label>
@@ -220,13 +232,15 @@ function DefaultComponent({ onAutowrite }) {
 function ComponentForCondition2({ onMagicWrite }) {
   return (
       <div>
-          <p>Magic Write will magically match your tone and continue your text from the current cursor location.</p>
-          <button onClick={onMagicWrite}>Magic Write</button>
+          <p>Magic Write will magically match your tone and continue your text.</p>
+          <Sparkles>
+            <button onClick={onMagicWrite}>Magic Write</button>
+          </Sparkles>
       </div>
   );
 }
 
-function ComponentForCondition3({ cursorPosition, text, onMagicWrite }) {
+function ComponentForCondition3({ text, onAgentWrite }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
 
@@ -240,7 +254,7 @@ function ComponentForCondition3({ cursorPosition, text, onMagicWrite }) {
       setMessages(messages => [...messages, { text: suggestion, sender: 'User' }]);
       // Simulate AI response and then call onMagicWrite to generate real continuation
       setMessages(messages => [...messages, { text: "Gladly, I'll type it up now!", sender: 'AI' }]);
-      onMagicWrite();
+      onAgentWrite();
   };
 
   const handleSubmit = () => {
@@ -265,7 +279,7 @@ function ComponentForCondition3({ cursorPosition, text, onMagicWrite }) {
               ))}
           </div>
           <div onClick={handleSuggestionClick} className="chat-suggestion">
-              Please read my text and continue writing from the cursor
+              Please read my text and continue writing for me
           </div>
           <input
               type="text"
