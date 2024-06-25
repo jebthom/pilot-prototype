@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import DOMPurify from 'dompurify';
 import Sparkles from './Sparkles';
-import { ReactComponent as QuillIcon } from './assets/quill.svg';
+import { ReactComponent as QuillIcon } from './assets/quill2.svg';
+import { ReactComponent as QuillIcon2 } from './assets/quill.svg';
+import { ReactComponent as AIIcon } from './assets/ai.svg';
+import { ReactComponent as UserIcon } from './assets/user.svg';
 import './App.css';
 
 
@@ -38,6 +41,10 @@ function TextEditor() {
 
     const handleAutowrite = () => {
         const safeText = DOMPurify.sanitize(text);
+        if (safeText.trim().length === 0) {
+            // If there is no text, do nothing and return early
+            return;
+        }
         editorRef.current.classList.remove("placeholder");
         const cursorPosition = safeText.length; // We'll pass the length of the text as the cursor position
         fetch('https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text', {
@@ -80,11 +87,15 @@ function TextEditor() {
     }
 
     const handleMagicWrite = () => {
-        editorRef.current.classList.remove("placeholder");
         const apiURL = 'https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text';
         // Need to use the innerText or else the checking for spacePrefix doesn't work reliably
         const editorText = editorRef.current ? editorRef.current.innerText : ""; // Directly use the current editor text
         const safeText = DOMPurify.sanitize(editorText);
+        if (safeText.trim().length === 0) {
+            // If there is no text, do nothing and return early
+            return;
+        }
+        editorRef.current.classList.remove("placeholder");
         const cursorPosition = safeText.length;
     
         fetch(apiURL, {
@@ -122,6 +133,11 @@ function TextEditor() {
     };
 
     const handleAgentWrite = () => {
+        const safeText = DOMPurify.sanitize(text);
+        if (safeText.trim().length === 0) {
+            // If there is no text, do nothing and return early
+            return;
+        }
         editorRef.current.classList.remove("placeholder");
         const apiURL = 'https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text';
         const cursorPosition = text.length;
@@ -181,7 +197,7 @@ function TextEditor() {
     }
 
     return (
-        <div className="text-editor-container">
+        <div className={`text-editor-container`}>
             <div
                 ref={editorRef}
                 contentEditable
@@ -283,7 +299,7 @@ function DefaultComponent({ onAutowrite }) {
 function ComponentForCondition2({ onMagicWrite }) {
   return (
       <div>
-          <p>Let the magic quill finish your paragraph.</p>
+          <p>Let the <Sparkles><span>magic quill</span></Sparkles> finish your paragraph.</p>
           <Sparkles>
             <button onClick={onMagicWrite} className='magic-button'>
                 <QuillIcon className="icon-quill" />
@@ -294,65 +310,76 @@ function ComponentForCondition2({ onMagicWrite }) {
 }
 
 function ComponentForCondition3({ text, onAgentWrite }) {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-
-  // Add initial AI message when the component mounts
-  useEffect(() => {
-      const initialMessage = {
-          text: 'Hi! I am your helpful writing assistant. I am here to help you complete a paragraph.',
-          sender: 'AI'
-      };
-      setMessages([initialMessage]);
-  }, []);
-
-  const handleInputChange = (event) => {
-      setInput(event.target.value);
-  };
-
-  const handleSuggestionClick = () => {
-      // Simulate sending the suggested message
-      const suggestion = "Please read my text and continue writing from the cursor";
-      setMessages(messages => [...messages, { text: suggestion, sender: 'User' }]);
-      // Simulate AI response and then call onMagicWrite to generate real continuation
-      setMessages(messages => [...messages, { text: "Gladly, I'll type it up now!", sender: 'AI' }]);
-      onAgentWrite();
-  };
-
-  const handleSubmit = () => {
-      if (input.trim() !== '') {
-          // Add the user's message to the chat
-          setMessages(messages => [...messages, { text: input, sender: 'User' }]);
-          // Simulate an AI response
-        //   const textBeforeCursor = text.substring(0, cursorPosition);
-          setMessages(messages => [...messages, { text: `Sorry I'm not available to chat right now. You can choose the suggestion below and I'll help write your text.`, sender: 'AI' }]);
-          // Clear the input field
-          setInput('');
-      }
-  };
-
-  return (
-      <div>
-          <div className="chat-container">
-              {messages.map((message, index) => (
-                  <div key={index} className={`chat-message ${message.sender.toLowerCase()}`}>
-                      <div>{message.text}</div>
-                  </div>
-              ))}
-          </div>
-          <div onClick={handleSuggestionClick} className="chat-suggestion">
-              Please read my text and continue writing for me
-          </div>
-          <input
-              type="text"
-              value={input}
-              onChange={handleInputChange}
-              className="chat-input"
-              placeholder='Chat not implemented.'
-          />
-          <button onClick={handleSubmit}>Send</button>
-      </div>
-  );
-}
-
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState('');
+  
+    useEffect(() => {
+        const initialMessage = {
+            text: 'Hi! I am your helpful writing assistant. I am here to help you complete a paragraph.',
+            sender: 'AI'
+        };
+        setMessages([initialMessage]);
+    }, []);
+  
+    const handleInputChange = (event) => {
+        setInput(event.target.value);
+    };
+  
+    const handleSuggestionClick = () => {
+        const suggestion = "Please read my text and continue writing from the cursor";
+        const safeText = DOMPurify.sanitize(text);
+        if (safeText.trim().length === 0) {
+            setMessages(messages => [...messages, { text: suggestion, sender: 'User' }]);
+            setMessages(messages => [...messages, { text: "Sorry, I don't see any text!", sender: 'AI' }]);
+        }
+        else {
+            setMessages(messages => [...messages, { text: suggestion, sender: 'User' }]);
+            setMessages(messages => [...messages, { text: "Gladly, I'll type it up now!", sender: 'AI' }]);
+            
+        }
+        onAgentWrite();
+    };
+  
+    const handleSubmit = () => {
+        if (input.trim() !== '') {
+            setMessages(messages => [...messages, { text: input, sender: 'User' }]);
+            setMessages(messages => [...messages, { text: `Sorry I'm not available to chat right now. You can choose the suggestion below and I'll help write your text.`, sender: 'AI' }]);
+            setInput('');
+        }
+    };
+  
+    return (
+        <div>
+            <div className="chat-container">
+                {messages.map((message, index) => (
+                    <div key={index} className={`chat-message ${message.sender.toLowerCase()}`}>
+                        {message.sender === 'AI' ? (
+                            <>
+                                <AIIcon className="chat-message-icon" />
+                                <div>{message.text}</div>
+                            </>
+                        ) : (
+                            <>
+                                <div>{message.text}</div>
+                                <UserIcon className="chat-message-icon" />
+                            </>
+                        )}
+                    </div>
+                ))}
+            </div>
+            <div onClick={handleSuggestionClick} className="chat-suggestion">
+                Please read my text and continue writing for me
+            </div>
+            {/* <input
+                type="text"
+                value={input}
+                onChange={handleInputChange}
+                className="chat-input"
+                placeholder='Chat not implemented.'
+            />
+            <button onClick={handleSubmit}>Send</button> */}
+        </div>
+    );
+  }
+  
 export default TextEditor;
