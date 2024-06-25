@@ -30,10 +30,10 @@ def generate_text():
             model="gpt-3.5-turbo",
             # model='llama3',
             messages=[
-                {"role": "system", "content": "Suggest a continuation for this prompt. Your reply should only be the continuation. The continuation should be grammatically correct and flow naturally from the prompt."},
+                {"role": "system", "content": "Suggest a continuation for this prompt. Your reply should only be the continuation. The continuation should be grammatically correct and flow naturally from the prompt. The continuation should be paragraph-length."},
                 {"role": "user", "content": context_text}
             ],
-            max_tokens=50  # Limit the length of the suggestion
+            max_tokens=250  # Limit the length of the suggestion
         )
         suggestion = response.choices[0].message.content.strip()
         return jsonify({'response': suggestion}), 200

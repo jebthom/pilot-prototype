@@ -53,7 +53,9 @@ function TextEditor() {
         .then(response => response.json())
         .then(data => {
             // Combine text and new response
-            const newText = safeText + (safeText.endsWith(' ') ? '' : ' ') + data.response;
+            const endsWithSpace = /[\s\u00A0]$/.test(safeText);
+            const spacePrefix = endsWithSpace ? '' : ' ';
+            const newText = safeText + spacePrefix + data.response;
             ignoreNextInput.current = true; // Ignore the next input event triggered by the manual update
             setText(newText);
             if (editorRef.current) {
@@ -208,32 +210,80 @@ function renderAIComponent(condition, handleAutowrite, handleMagicWrite, handleA
 }
 
 function DefaultComponent({ onAutowrite }) {
-  const [tone, setTone] = useState('Casual');  // Default tone
-
-  const handleToneChange = (event) => {
+    const [tone, setTone] = useState('Casual');  // Default tone
+    const [style, setStyle] = useState('Creative');  // Default style
+    const [verbosity, setVerbosity] = useState(50);  // Default slider value for verbosity
+    const [creativity, setCreativity] = useState(50);  // Default slider value for creativity
+  
+    const handleToneChange = (event) => {
       setTone(event.target.value);
-  };
-
-  return (
-      <div>
-          <p>Select the tone of your text, and the Autowrite tool will continue your text.</p>
-          <button onClick={onAutowrite}>Autowrite</button>
-          <div>
-              <label htmlFor="tone-dropdown">Tone: </label>
-              <select id="tone-dropdown" value={tone} onChange={handleToneChange}>
-                  <option value="Casual">Casual</option>
-                  <option value="Formal">Formal</option>
-                  <option value="Academic">Academic</option>
-              </select>
-          </div>
+    };
+  
+    const handleStyleChange = (event) => {
+      setStyle(event.target.value);
+    };
+  
+    const handleVerbosityChange = (event) => {
+      setVerbosity(event.target.value);
+    };
+  
+    const handleCreativityChange = (event) => {
+      setCreativity(event.target.value);
+    };
+  
+    return (
+      <div style={{ padding: '20px' }}>
+        <p>Select the tone, style, creativity, and verbosity of your text, and the Autowrite tool will complete your paragraph.</p>
+        <button onClick={onAutowrite}>Autowrite</button>
+        <div style={{ margin: '10px 0' }}>
+          <label htmlFor="tone-dropdown">Tone: </label>
+          <select id="tone-dropdown" value={tone} onChange={handleToneChange}>
+            <option value="Casual">Casual</option>
+            <option value="Formal">Formal</option>
+            <option value="Academic">Academic</option>
+          </select>
+        </div>
+        <div style={{ margin: '10px 0' }}>
+          <label htmlFor="style-dropdown">Style: </label>
+          <select id="style-dropdown" value={style} onChange={handleStyleChange}>
+            <option value="Creative">Creative</option>
+            <option value="Technical">Technical</option>
+            <option value="Narrative">Narrative</option>
+          </select>
+        </div>
+        <div style={{ margin: '10px 0' }}>
+          <label htmlFor="creativity-slider">Creativity: </label>
+          <input 
+            type="range" 
+            id="creativity-slider" 
+            value={creativity} 
+            onChange={handleCreativityChange} 
+            min="0" 
+            max="100" 
+          />
+          <span>{creativity}</span>
+        </div>
+        <div style={{ margin: '10px 0' }}>
+          <label htmlFor="verbosity-slider">Verbosity: </label>
+          <input 
+            type="range" 
+            id="verbosity-slider" 
+            value={verbosity} 
+            onChange={handleVerbosityChange} 
+            min="0" 
+            max="100" 
+          />
+          <span>{verbosity}</span>
+        </div>
+        
       </div>
-  );
-}
+    );
+  }
 
 function ComponentForCondition2({ onMagicWrite }) {
   return (
       <div>
-          <p>Magic Write will magically match your tone and continue your text.</p>
+          <p>Let the magic quill finish your paragraph.</p>
           <Sparkles>
             <button onClick={onMagicWrite} className='magic-button'>
                 <QuillIcon className="icon-quill" />
@@ -246,6 +296,15 @@ function ComponentForCondition2({ onMagicWrite }) {
 function ComponentForCondition3({ text, onAgentWrite }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+
+  // Add initial AI message when the component mounts
+  useEffect(() => {
+      const initialMessage = {
+          text: 'Hi! I am your helpful writing assistant. I am here to help you complete a paragraph.',
+          sender: 'AI'
+      };
+      setMessages([initialMessage]);
+  }, []);
 
   const handleInputChange = (event) => {
       setInput(event.target.value);
