@@ -299,7 +299,7 @@ function DefaultComponent({ onAutowrite }) {
 function ComponentForCondition2({ onMagicWrite }) {
   return (
       <div>
-          <p>Let the <Sparkles><span>magic quill</span></Sparkles> finish your paragraph.</p>
+          <p>Let the magic quill finish your paragraph.</p>
           <Sparkles>
             <button onClick={onMagicWrite} className='magic-button'>
                 <QuillIcon className="icon-quill" />

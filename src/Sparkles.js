@@ -148,6 +148,7 @@ const Wrapper = styled.span`
 const SparkleWrapper = styled.span`
   position: absolute;
   display: block;
+  z-index: 1;
   @media (prefers-reduced-motion: no-preference) {
     animation: ${comeInOut} 700ms forwards;
   }
@@ -160,7 +161,7 @@ const SparkleSvg = styled.svg`
 `;
 const ChildWrapper = styled.strong`
   position: relative;
-  z-index: 1;
+  z-index: 0;
   font-weight: bold;
 `;
 export default Sparkles;
