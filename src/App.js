@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import DOMPurify from 'dompurify';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Sparkles from './Sparkles';
 import { ReactComponent as QuillIcon } from './assets/quill2.svg';
 import { ReactComponent as QuillIcon2 } from './assets/quill.svg';
@@ -7,13 +8,28 @@ import { ReactComponent as AIIcon } from './assets/ai.svg';
 import { ReactComponent as UserIcon } from './assets/user.svg';
 import './App.css';
 
+function App() {
+    return (
+        <Router>
+          <Routes>
+            <Route path="/condition1" render={() => <TextEditor initialCondition="condition1" />} />
+            <Route path="/condition2" render={() => <TextEditor initialCondition="condition2" />} />
+            <Route path="/condition3" render={() => <TextEditor initialCondition="condition3" />} />
+            <Route path="/" render={() => <TextEditor initialCondition={null} />} /> {/* Default page */}
+          </Routes>
+        </Router>
+    );
+}
 
-function TextEditor() {
+export default App;
+
+function TextEditor({ initialCondition }) {
     const [text, setText] = useState("");
     const editorRef = useRef(null);
     const ignoreNextInput = useRef(false);
     const conditions = ['condition1', 'condition2', 'condition3'];
     const [condition, setCondition] = useState(() => {
+        if (initialCondition) return initialCondition;
         const randomIndex = Math.floor(Math.random() * conditions.length);
         return conditions[randomIndex];
     });
@@ -381,5 +397,3 @@ function ComponentForCondition3({ text, onAgentWrite }) {
         </div>
     );
   }
-  
-export default TextEditor;
