@@ -8,14 +8,35 @@ import { ReactComponent as AIIcon } from './assets/ai.svg';
 import { ReactComponent as UserIcon } from './assets/user.svg';
 import './App.css';
 
-function TextEditor({}) {
+function App() {
+    return (
+      <Router>
+        <Routes>
+          <Route path="/" element={<TextEditor initialCondition={null} />} />
+          <Route path="/condition1" element={<TextEditor initialCondition="condition1" />} />
+          <Route path="/condition2" element={<TextEditor initialCondition="condition2" />} />
+          <Route path="/condition3" element={<TextEditor initialCondition="condition3" />} />
+        </Routes>
+      </Router>
+    );
+}
+  
+export default App;
+
+
+function TextEditor({ initialCondition }) {
     const [text, setText] = useState("");
     const editorRef = useRef(null);
     const ignoreNextInput = useRef(false);
     const conditions = ['condition1', 'condition2', 'condition3'];
+    // Set initial condition randomly if initialCondition is null, otherwise use initialCondition
     const [condition, setCondition] = useState(() => {
-        const randomIndex = Math.floor(Math.random() * conditions.length);
-        return conditions[randomIndex];
+        if (initialCondition === null) {
+            const randomIndex = Math.floor(Math.random() * conditions.length);
+            return conditions[randomIndex];
+        } else {
+            return initialCondition;
+        }
     });
 
     useEffect(() => {
@@ -382,4 +403,4 @@ function ComponentForCondition3({ text, onAgentWrite }) {
     );
   }
 
-  export default TextEditor;
+//   export default TextEditor;
