@@ -11,6 +11,10 @@ client = OpenAI(
 app = Flask(__name__, static_folder='build', static_url_path='')
 CORS(app)
 
+@app.before_request
+def log_request():
+    print(f"Received request for {request.path}")
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
