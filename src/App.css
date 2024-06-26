@@ -8,6 +8,7 @@
   background-color: #fafafa; /* Soft background color */
   padding: 20px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+  position: relative;
 }
 
 /* Textarea styling enhancements */

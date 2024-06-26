@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import DOMPurify from 'dompurify';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Sparkles from './Sparkles';
+import FSSparkles from './FSSparkles';
 import { ReactComponent as QuillIcon } from './assets/quill2.svg';
 import { ReactComponent as QuillIcon2 } from './assets/quill.svg';
 import { ReactComponent as AIIcon } from './assets/ai.svg';
@@ -16,7 +17,6 @@ function App() {
           <Route path="/condition1" element={<TextEditor initialCondition="condition1" />} />
           <Route path="/condition2" element={<TextEditor initialCondition="condition2" />} />
           <Route path="/condition3" element={<TextEditor initialCondition="condition3" />} />
-          <Route path="*" element={<Navigate replace to="/" />} />
         </Routes>
       </Router>
     );
@@ -39,6 +39,7 @@ function TextEditor({ initialCondition }) {
             return initialCondition;
         }
     });
+    const [showSparkles, setShowSparkles] = useState(false);
 
     useEffect(() => {
         if (text.trim() === "") {
@@ -150,6 +151,15 @@ function TextEditor({ initialCondition }) {
             }
     
             ignoreNextInput.current = true; // To ignore the next input event
+
+            // Trigger sparkles
+            setShowSparkles(true);
+            
+            // Set a timeout to hide sparkles after 3-5 seconds
+            setTimeout(() => {
+                setShowSparkles(false);
+            }, 3000);  // Change 3000 to 5000 for 5 seconds
+
         })
         .catch(error => console.error('Error:', error));
     };
@@ -177,7 +187,7 @@ function TextEditor({ initialCondition }) {
         .then(response => response.json())
         .then(data => {
             const fullResponse = data.response;
-            const delay = 50; // milliseconds between "keystrokes"
+            const delay = 40; // milliseconds between "keystrokes"
             typeText(fullResponse, delay);
         })
         .catch(error => console.error('Error:', error));
@@ -230,7 +240,9 @@ function TextEditor({ initialCondition }) {
             <div className='ai-area'>
                 {renderAIComponent(condition, handleAutowrite, handleMagicWrite, handleAgentWrite, text)}
             </div>
+            {showSparkles && <FSSparkles />}
         </div>
+        
     );
 }
 
@@ -321,7 +333,7 @@ function DefaultComponent({ onAutowrite }) {
 function ComponentForCondition2({ onMagicWrite }) {
   return (
       <div>
-          <p>Let the magic quill finish your paragraph.</p>
+          <p>Let the <Sparkles>magic quill</Sparkles> finish your paragraph.</p>
           <Sparkles>
             <button onClick={onMagicWrite} className='magic-button'>
                 <QuillIcon className="icon-quill" />
