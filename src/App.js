@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import DOMPurify from 'dompurify';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Sparkles from './Sparkles';
 import { ReactComponent as QuillIcon } from './assets/quill2.svg';
 import { ReactComponent as QuillIcon2 } from './assets/quill.svg';
@@ -16,6 +16,7 @@ function App() {
           <Route path="/condition1" element={<TextEditor initialCondition="condition1" />} />
           <Route path="/condition2" element={<TextEditor initialCondition="condition2" />} />
           <Route path="/condition3" element={<TextEditor initialCondition="condition3" />} />
+          <Route path="*" element={<Navigate replace to="/" />} />
         </Routes>
       </Router>
     );
