@@ -26,6 +26,12 @@ def serve(path):
     else:
         return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/condition1')
+@app.route('/condition2')
+@app.route('/condition3')
+def index():
+    return send_from_directory(app.static_folder, 'index.html')
+
 @app.route('/generate-text', methods=['POST'])
 def generate_text():
     input_text = request.json['text']
