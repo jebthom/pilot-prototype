@@ -18,9 +18,10 @@ def log_request():
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
-    path_exists = os.path.exists(os.path.join(app.static_folder, path))
-    print(f"Requested path: {path}, Exists: {path_exists}, Serving: {'file' if path_exists else 'index.html'}")
-    if path != "" and path_exists:
+    full_path = os.path.join(app.static_folder, path)
+    exists = os.path.exists(full_path)
+    print(f"Requested path: {path}, Full path: {full_path}, Exists: {exists}")
+    if path != "" and exists:
         return send_from_directory(app.static_folder, path)
     else:
         return send_from_directory(app.static_folder, 'index.html')
