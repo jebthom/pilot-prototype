@@ -14,9 +14,12 @@ CORS(app)
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
-    if path and os.path.exists(app.static_folder + '/' + path):
+    path_exists = os.path.exists(os.path.join(app.static_folder, path))
+    print(f"Requested path: {path}, Exists: {path_exists}, Serving: {'file' if path_exists else 'index.html'}")
+    if path != "" and path_exists:
         return send_from_directory(app.static_folder, path)
-    return send_from_directory(app.static_folder, 'index.html')
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/generate-text', methods=['POST'])
 def generate_text():
