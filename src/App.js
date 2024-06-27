@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import DOMPurify from 'dompurify';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Sparkles from './Sparkles';
 import FSSparkles from './FSSparkles';
 import { ReactComponent as QuillIcon } from './assets/quill2.svg';
-import { ReactComponent as QuillIcon2 } from './assets/quill.svg';
 import { ReactComponent as AIIcon } from './assets/ai.svg';
 import { ReactComponent as UserIcon } from './assets/user.svg';
 import './App.css';
@@ -31,7 +30,7 @@ function TextEditor({ initialCondition }) {
     const ignoreNextInput = useRef(false);
     const conditions = ['condition1', 'condition2', 'condition3'];
     // Set initial condition randomly if initialCondition is null, otherwise use initialCondition
-    const [condition, setCondition] = useState(() => {
+    const [condition, /*setCondition*/] = useState(() => {
         if (initialCondition === null) {
             const randomIndex = Math.floor(Math.random() * conditions.length);
             return conditions[randomIndex];
@@ -42,8 +41,9 @@ function TextEditor({ initialCondition }) {
     const [showSparkles, setShowSparkles] = useState(false);
     const [agentTypingCompleted, setAgentTypingCompleted] = useState(false);
     const [agentStartTime, setAgentStartTime] = useState(null);
-    // framingText should always end with a space so that the concatenation is correct
-    const [framingText, setFramingText] = useState("John looked up at the sky and gasped. ");
+    // writingPrompt should always end with a space so that the concatenation is correct
+    const writingPrompt = "John looked up and gasped. ";
+    const framingText = "Write 2-3 sentences which continue from this prompt:   ";
 
     useEffect(() => {
         if (text.trim() === "") {
@@ -51,7 +51,7 @@ function TextEditor({ initialCondition }) {
         } else {
             editorRef.current.classList.remove("placeholder");
         }
-    }, []); // Empty dependency array to run only once on mount
+    }, [text]); // Empty dependency array to run only once on mount
 
     const handleInput = (e) => {
         if (!ignoreNextInput.current) {
@@ -69,7 +69,7 @@ function TextEditor({ initialCondition }) {
     const handleAutowrite = () => {
         const startTime = performance.now();
         const safeText = DOMPurify.sanitize(text);
-        const combinedText = `${framingText}${safeText}`;
+        const combinedText = `${writingPrompt}${safeText}`;
         if (safeText.trim().length === 0) {
             // If there is no text, do nothing and return early
             return;
@@ -125,7 +125,7 @@ function TextEditor({ initialCondition }) {
         // Need to use the innerText or else the checking for spacePrefix doesn't work reliably
         const editorText = editorRef.current ? editorRef.current.innerText : ""; // Directly use the current editor text
         const safeText = DOMPurify.sanitize(editorText);
-        const combinedText = `${framingText}${safeText}`;
+        const combinedText = `${writingPrompt}${safeText}`;
         if (safeText.trim().length === 0) {
             // If there is no text, do nothing and return early
             return;
@@ -184,7 +184,7 @@ function TextEditor({ initialCondition }) {
         setAgentStartTime(performance.now());
         setAgentTypingCompleted(false);
         const safeText = DOMPurify.sanitize(text);
-        const combinedText = `${framingText}${safeText}`;
+        const combinedText = `${writingPrompt}${safeText}`;
         if (safeText.trim().length === 0) {
             // If there is no text, do nothing and return early
             return;
@@ -259,7 +259,10 @@ function TextEditor({ initialCondition }) {
 
     return (
         <div>
-            <span className='framing-text'>{framingText}</span>
+            <div >
+                <span className='framing-text'>{framingText}</span>
+                <span className='writing-prompt'>{writingPrompt}</span>
+            </div>
             <div className={`text-editor-container`}>
                 <div
                     ref={editorRef}
@@ -376,7 +379,7 @@ function ComponentForCondition2({ onMagicWrite }) {
 
 function ComponentForCondition3({ text, onAgentWrite }) {
     const [messages, setMessages] = useState([]);
-    const [input, setInput] = useState('');
+    // const [input, setInput] = useState('');
   
     useEffect(() => {
         const initialMessage = {
@@ -385,10 +388,6 @@ function ComponentForCondition3({ text, onAgentWrite }) {
         };
         setMessages([initialMessage]);
     }, []);
-  
-    const handleInputChange = (event) => {
-        setInput(event.target.value);
-    };
   
     const handleSuggestionClick = () => {
         const suggestion = "Please read my text and continue writing from the cursor";
@@ -404,14 +403,19 @@ function ComponentForCondition3({ text, onAgentWrite }) {
         }
         onAgentWrite();
     };
+
+    /* These functions work with the chat input area, which has been removed for the pilot. */
+    // const handleInputChange = (event) => {
+    //     setInput(event.target.value);
+    // };
   
-    const handleSubmit = () => {
-        if (input.trim() !== '') {
-            setMessages(messages => [...messages, { text: input, sender: 'User' }]);
-            setMessages(messages => [...messages, { text: `Sorry I'm not available to chat right now. You can choose the suggestion below and I'll help write your text.`, sender: 'AI' }]);
-            setInput('');
-        }
-    };
+    // const handleSubmit = () => {
+    //     if (input.trim() !== '') {
+    //         setMessages(messages => [...messages, { text: input, sender: 'User' }]);
+    //         setMessages(messages => [...messages, { text: `Sorry I'm not available to chat right now. You can choose the suggestion below and I'll help write your text.`, sender: 'AI' }]);
+    //         setInput('');
+    //     }
+    // };
   
     return (
         <div>

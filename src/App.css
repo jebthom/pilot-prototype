@@ -180,6 +180,14 @@
 .framing-text {
   font-size: larger; /* Adjusts the font size to be slightly larger */
   font-weight: bold; /* Makes the font bold */
+  padding-left: 20px;
+  padding-top: 20px;
+  display: block;
+}
+
+.writing-prompt {
+  font-size: x-large; /* Adjusts the font size to be slightly larger */
+  font-weight: bold; /* Makes the font bold */
   padding: 20px; /* Adds 20px of space on all sides */
   display: block;
 }
