@@ -40,6 +40,10 @@ function TextEditor({ initialCondition }) {
         }
     });
     const [showSparkles, setShowSparkles] = useState(false);
+    const [agentTypingCompleted, setAgentTypingCompleted] = useState(false);
+    const [agentStartTime, setAgentStartTime] = useState(null);
+    // framingText should always end with a space so that the concatenation is correct
+    const [framingText, setFramingText] = useState("John looked up at the sky and gasped. ");
 
     useEffect(() => {
         if (text.trim() === "") {
@@ -63,20 +67,22 @@ function TextEditor({ initialCondition }) {
     };
 
     const handleAutowrite = () => {
+        const startTime = performance.now();
         const safeText = DOMPurify.sanitize(text);
+        const combinedText = `${framingText}${safeText}`;
         if (safeText.trim().length === 0) {
             // If there is no text, do nothing and return early
             return;
         }
         editorRef.current.classList.remove("placeholder");
-        const cursorPosition = safeText.length; // We'll pass the length of the text as the cursor position
+        const cursorPosition = combinedText.length; // We'll pass the length of the text as the cursor position
         fetch('https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                text: safeText,
+                text: combinedText,
                 cursorPosition: cursorPosition
             })
         })
@@ -92,6 +98,10 @@ function TextEditor({ initialCondition }) {
                 editorRef.current.innerText = newText; // Manually update text
                 placeCaretAtEnd(editorRef.current); // Set caret at the end
             }
+        })
+        .finally(() => {
+            const endTime = performance.now();  // Stop timing after the asynchronous operation completes
+            console.log(`handleAutowrite took ${endTime - startTime} milliseconds.`);
         })
         .catch(error => console.error('Error:', error));
     };
@@ -110,16 +120,18 @@ function TextEditor({ initialCondition }) {
     }
 
     const handleMagicWrite = () => {
+        const startTime = performance.now();
         const apiURL = 'https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text';
         // Need to use the innerText or else the checking for spacePrefix doesn't work reliably
         const editorText = editorRef.current ? editorRef.current.innerText : ""; // Directly use the current editor text
         const safeText = DOMPurify.sanitize(editorText);
+        const combinedText = `${framingText}${safeText}`;
         if (safeText.trim().length === 0) {
             // If there is no text, do nothing and return early
             return;
         }
         editorRef.current.classList.remove("placeholder");
-        const cursorPosition = safeText.length;
+        const cursorPosition = combinedText.length;
     
         fetch(apiURL, {
             method: 'POST',
@@ -127,7 +139,7 @@ function TextEditor({ initialCondition }) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                text: safeText,
+                text: combinedText,
                 cursorPosition: cursorPosition
             })
         })
@@ -161,18 +173,25 @@ function TextEditor({ initialCondition }) {
             }, 3000);  // Change 3000 to 5000 for 5 seconds
 
         })
+        .finally(() => {
+            const endTime = performance.now();  // Stop timing after the asynchronous operation completes
+            console.log(`handleMagicWrite took ${endTime - startTime} milliseconds.`);
+        })
         .catch(error => console.error('Error:', error));
     };
 
     const handleAgentWrite = () => {
+        setAgentStartTime(performance.now());
+        setAgentTypingCompleted(false);
         const safeText = DOMPurify.sanitize(text);
+        const combinedText = `${framingText}${safeText}`;
         if (safeText.trim().length === 0) {
             // If there is no text, do nothing and return early
             return;
         }
         editorRef.current.classList.remove("placeholder");
         const apiURL = 'https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text';
-        const cursorPosition = text.length;
+        const cursorPosition = combinedText.length;
     
         fetch(apiURL, {
             method: 'POST',
@@ -180,14 +199,14 @@ function TextEditor({ initialCondition }) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                text: text,
+                text: combinedText,
                 cursorPosition: cursorPosition
             })
         })
         .then(response => response.json())
         .then(data => {
             const fullResponse = data.response;
-            const delay = 40; // milliseconds between "keystrokes"
+            const delay = 30; // milliseconds between "keystrokes"
             typeText(fullResponse, delay);
         })
         .catch(error => console.error('Error:', error));
@@ -224,25 +243,37 @@ function TextEditor({ initialCondition }) {
                 currentWordIndex++; // Move to the next word
             } else {
                 clearInterval(intervalId); // Stop the interval when done
+                setAgentTypingCompleted(true);
+
             }
         }, delay);
     }
 
+    useEffect(() => {
+        if (agentTypingCompleted && agentStartTime) {
+            const endTime = performance.now();
+            console.log(`Total processing time: ${endTime - agentStartTime} milliseconds.`);
+            setAgentTypingCompleted(false);  // Reset for next usage
+        }
+    }, [agentTypingCompleted, agentStartTime]);
+
     return (
-        <div className={`text-editor-container`}>
-            <div
-                ref={editorRef}
-                contentEditable
-                onInput={handleInput}
-                className="editor"
-                data-placeholder="Start typing here..."
-            />
-            <div className='ai-area'>
-                {renderAIComponent(condition, handleAutowrite, handleMagicWrite, handleAgentWrite, text)}
+        <div>
+            <span className='framing-text'>{framingText}</span>
+            <div className={`text-editor-container`}>
+                <div
+                    ref={editorRef}
+                    contentEditable
+                    onInput={handleInput}
+                    className="editor"
+                    data-placeholder="Start typing here..."
+                />
+                <div className='ai-area'>
+                    {renderAIComponent(condition, handleAutowrite, handleMagicWrite, handleAgentWrite, text)}
+                </div>
+                {showSparkles && <FSSparkles />}
             </div>
-            {showSparkles && <FSSparkles />}
         </div>
-        
     );
 }
 

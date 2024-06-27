@@ -176,3 +176,10 @@
   color: white;
   font-family: 'Brush Script MT', cursive;
 }
+
+.framing-text {
+  font-size: larger; /* Adjusts the font size to be slightly larger */
+  font-weight: bold; /* Makes the font bold */
+  padding: 20px; /* Adds 20px of space on all sides */
+  display: block;
+}
