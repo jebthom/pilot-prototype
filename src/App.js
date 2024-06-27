@@ -269,7 +269,7 @@ function TextEditor({ initialCondition }) {
                     contentEditable
                     onInput={handleInput}
                     className="editor"
-                    data-placeholder="Start typing here..."
+                    data-placeholder="Continue typing here..."
                 />
                 <div className='ai-area'>
                     {renderAIComponent(condition, handleAutowrite, handleMagicWrite, handleAgentWrite, text)}
