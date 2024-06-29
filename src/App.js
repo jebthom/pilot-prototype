@@ -71,7 +71,7 @@ function TextEditor({ initialCondition }) {
         setIsButtonDisabled(true);
         setTimeout(() => {
             setIsButtonDisabled(false);
-        }, 3000); // Disable the button for 3 seconds
+        }, 2000); // Disable the button for 2 seconds
     };
 
     const handleAutowrite = () => {
