@@ -331,7 +331,7 @@ function DefaultComponent({ onAutowrite }) {
   
     return (
       <div style={{ padding: '20px' }}>
-        <p>Select the tone, style, creativity, and verbosity of your text, and the Autowrite tool will complete your paragraph.</p>
+        <p>Select the tone, style, creativity, and verbosity of your text, and the Autowrite tool will continue your text.</p>
         <button onClick={onAutowrite}>Autowrite</button>
         <div style={{ margin: '10px 0' }}>
           <label htmlFor="tone-dropdown">Tone: </label>
@@ -381,7 +381,7 @@ function DefaultComponent({ onAutowrite }) {
 function ComponentForCondition2({ onMagicWrite }) {
   return (
       <div>
-          <p>Let the <Sparkles>magic quill</Sparkles> finish your paragraph.</p>
+          <p>Let the <Sparkles>magic quill</Sparkles> continue your text.</p>
           <Sparkles>
             <button onClick={onMagicWrite} className='magic-button'>
                 <QuillIcon className="icon-quill" />
