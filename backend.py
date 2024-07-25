@@ -29,6 +29,8 @@ def serve(path):
 @app.route('/condition1')
 @app.route('/condition2')
 @app.route('/condition3')
+@app.route('/condition4')
+@app.route('/condition5')
 def index():
     return send_from_directory(app.static_folder, 'index.html')
 
@@ -53,6 +55,31 @@ def generate_text():
         return jsonify({'response': suggestion}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/generate-chat-no-text', methods=['POST'])
+def generate_chat_no_text():
+    chat_history = request.json['chat_history']
+    # new_message = request.json['new_message']
+
+    try:
+        # # Append the new user message to the chat history
+        # chat_history.append({"role": "user", "content": new_message})
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=chat_history,
+            max_tokens=250  # Adjust the token limit as needed
+        )
+        
+        assistant_message = response.choices[0].message.content.strip()
+        # Append the assistant response to the chat history
+        chat_history.append({"role": "assistant", "content": assistant_message})
+
+        return jsonify({'response': assistant_message, 'chat_history': chat_history}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
 
 if __name__ == '__main__':
     app.run(debug=False)
