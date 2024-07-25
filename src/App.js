@@ -480,6 +480,7 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
     const [messages, setMessages] = useState([]);
     const [chatHistory, setChatHistory] = useState([]);
     const [input, setInput] = useState('');
+    const chatContainerRef = useRef(null);
   
     useEffect(() => {
         const initialMessage = {
@@ -488,11 +489,17 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
         };
         const initialSystemMessage = {
             role: 'system',
-            content: "You are a helpful writing assistant. Answer general writing questions, but politely decline to answer questions not related to writing."
+            content: "You are a helpful writing assistant. Answer general writing questions, but politely decline to answer questions not related to writing. Respond with text only, without formatting or markdown."
         };
         setMessages([initialMessage]);
         setChatHistory([initialSystemMessage]);
     }, []);
+
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages]);
   
     const handleSuggestionClick = () => {
         // console.log("disabled button", isDisabled);
@@ -512,48 +519,41 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
         onAgentWrite();
     };
 
-    /* These functions work with the chat input area, which has been removed for the pilot. */
     const handleInputChange = (event) => {
         setInput(event.target.value);
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
         if (input.trim() !== '') {
             const safeInput = DOMPurify.sanitize(input);
-            const newMessage = { content: safeInput, role: 'User' };
+            const newMessage = { role: 'user', content: safeInput };
             const updatedChatHistory = [...chatHistory, newMessage];
-
             setMessages(messages => [...messages, newMessage]);
             setInput('');
+            const apiURL = 'https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-chat-no-text';
 
-            try {
-                const apiURL = 'https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-chat-no-text';
-                const response = await fetch(apiURL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        chat_history: updatedChatHistory
-                    })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    const assistantMessage = { content: data.response, role: 'AI' };
-                    setMessages(messages => [...messages, assistantMessage]);
-                    setChatHistory(data.chat_history);
-                } else {
-                    setMessages(messages => [...messages, { content: 'Sorry, looks like there was an error.', role: 'AI' }]);
-                }
-            } catch (error) {
-                setMessages(messages => [...messages, { content: 'Sorry, looks like there was an error.', role: 'AI' }]);
-            }
+            fetch(apiURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_history: updatedChatHistory
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const assistantMessage = { role: 'AI', content: data.response};
+                setMessages(messages => [...messages, assistantMessage]);
+                setChatHistory(data.chat_history);
+            })
+            .catch(error => console.error('Error:', error));
         }
     };
   
     return (
         <div>
-            <div className="chat-container">
+            <div className="chat-container" ref={chatContainerRef}>
                 {messages.map((message, index) => (
                     <div key={index} className={`chat-message ${message.role.toLowerCase()}`}>
                         {message.role === 'AI' ? (
@@ -586,18 +586,30 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
   }
 
 
-  function ComponentForCondition5({ text, onAgentWrite, isDisabled, disableButton }) {
+  function ComponentForCondition5({ text, onAgentWrite, isDisabled, disableButton}) {
     const [messages, setMessages] = useState([]);
-    
-    // const [input, setInput] = useState('');
+    const [chatHistory, setChatHistory] = useState([]);
+    const [input, setInput] = useState('');
+    const chatContainerRef = useRef(null);
   
     useEffect(() => {
         const initialMessage = {
-            text: 'Hi! I am your helpful writing assistant. I am here to help you complete a paragraph.',
-            sender: 'AI'
+            content: 'Hi! I am your helpful writing assistant. I am here to help you complete a paragraph.',
+            role: 'AI'
+        };
+        const initialSystemMessage = {
+            role: 'system',
+            content: "You are an assistant designed to determine if a user's message is a request for text completion, continuing a story, or writing content for them. When a user sends a message, follow these guidelines: 1. If the user's message asks for text completion, to continue writing a story, or to add text for them using phrases like \"finish this text\", \"continue this story\", \"write the next part\", \"complete this sentence\", \"add more to this paragraph\", \"extend this text\", \"help me write more\", \"continue writing for me\", \"generate the next section\", \"provide the next lines\", \"add to this\", \"continue the narrative\", \"fill in the rest\", \"carry on with this text\", \"write for me\", \"write the following part\", or \"extend the narrative\", respond with 'true'. If the request mentions writing or text at all, respond with 'true'.  2. If the user's message is a question, a request for information, or any interaction not related to text completion, respond with 'false'.\n\nYour response should only be 'true' or 'false' based on these criteria."
         };
         setMessages([initialMessage]);
+        setChatHistory([initialSystemMessage]);
     }, []);
+
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages]);
   
     const handleSuggestionClick = () => {
         // console.log("disabled button", isDisabled);
@@ -606,43 +618,75 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
         const suggestion = "Please read my text and continue writing for me";
         const safeText = DOMPurify.sanitize(text);
         if (safeText.trim().length === 0) {
-            setMessages(messages => [...messages, { text: suggestion, sender: 'User' }]);
-            setMessages(messages => [...messages, { text: "Sorry, I don't see any text!", sender: 'AI' }]);
+            setMessages(messages => [...messages, { content: suggestion, role: 'User' }]);
+            setMessages(messages => [...messages, { content: "Sorry, I don't see any text!", role: 'AI' }]);
         }
         else {
-            setMessages(messages => [...messages, { text: suggestion, sender: 'User' }]);
-            setMessages(messages => [...messages, { text: "Gladly, I'll type it up now!", sender: 'AI' }]);
+            setMessages(messages => [...messages, { content: suggestion, role: 'User' }]);
+            setMessages(messages => [...messages, { content: "Gladly, I'll type it up now!", role: 'AI' }]);
             
         }
         onAgentWrite();
     };
 
-    /* These functions work with the chat input area, which has been removed for the pilot. */
-    // const handleInputChange = (event) => {
-    //     setInput(event.target.value);
-    // };
-  
-    // const handleSubmit = () => {
-    //     if (input.trim() !== '') {
-    //         setMessages(messages => [...messages, { text: input, sender: 'User' }]);
-    //         setMessages(messages => [...messages, { text: `Sorry I'm not available to chat right now. You can choose the suggestion below and I'll help write your text.`, sender: 'AI' }]);
-    //         setInput('');
-    //     }
-    // };
+    const handleInputChange = (event) => {
+        setInput(event.target.value);
+    };
+
+    const handleSubmit = () => {
+        if (input.trim() !== '') {
+            const safeInput = DOMPurify.sanitize(input);
+            const safeText = DOMPurify.sanitize(text);
+            const newMessage = { role: 'user', content: safeInput };
+            const updatedChatHistory = [...chatHistory, newMessage];
+            setMessages(messages => [...messages, newMessage]);
+            setInput('');
+
+            const apiURL = 'https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-chat-no-text';
+
+            fetch(apiURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_history: updatedChatHistory
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const assistantMessage = { role: 'AI', content: data.response};
+                console.log("response", data.response);
+                if (safeInput.trim().length === 0) {
+                    setMessages(messages => [...messages, { content: "Sorry, I don't see any text!", role: 'AI' }]);
+                }
+                else if (data.response === 'true') {
+                    setMessages(messages => [...messages, { content: "Gladly, I'll type it up now!", role: 'AI' }]);
+                    onAgentWrite();
+                }
+                else {
+                    setMessages(messages => [...messages, { content: "Sorry, right now I can only help complete your text. Try making requests like \"finish this text\", \"continue this story\", \"write the next part\", \"add more to this paragraph\"", role: 'AI' }]);
+                }
+                setChatHistory(data.chat_history);
+
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    };
   
     return (
         <div>
-            <div className="chat-container">
+            <div className="chat-container" ref={chatContainerRef}>
                 {messages.map((message, index) => (
-                    <div key={index} className={`chat-message ${message.sender.toLowerCase()}`}>
-                        {message.sender === 'AI' ? (
+                    <div key={index} className={`chat-message ${message.role.toLowerCase()}`}>
+                        {message.role === 'AI' ? (
                             <>
                                 <AIIcon className="chat-message-icon" />
-                                <div>{message.text}</div>
+                                <div>{message.content}</div>
                             </>
                         ) : (
                             <>
-                                <div>{message.text}</div>
+                                <div>{message.content}</div>
                                 <UserIcon className="chat-message-icon" />
                             </>
                         )}
@@ -652,14 +696,14 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
             <div onClick={handleSuggestionClick} className="chat-suggestion">
                 Please read my text and continue writing for me
             </div>
-            {/* <input
+            <input
                 type="text"
                 value={input}
                 onChange={handleInputChange}
                 className="chat-input"
-                placeholder='Chat not implemented.'
+                placeholder='Chat with the Writing Assistant'
             />
-            <button onClick={handleSubmit}>Send</button> */}
+            <button onClick={handleSubmit}>Send</button>
         </div>
     );
   }

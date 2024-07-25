@@ -60,16 +60,12 @@ def generate_text():
 @app.route('/generate-chat-no-text', methods=['POST'])
 def generate_chat_no_text():
     chat_history = request.json['chat_history']
-    # new_message = request.json['new_message']
 
     try:
-        # # Append the new user message to the chat history
-        # chat_history.append({"role": "user", "content": new_message})
-
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=chat_history,
-            max_tokens=250  # Adjust the token limit as needed
+            max_tokens=150  # Adjust the token limit as needed
         )
         
         assistant_message = response.choices[0].message.content.strip()
