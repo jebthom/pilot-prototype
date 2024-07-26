@@ -657,7 +657,7 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
             .then(data => {
                 const assistantMessage = { role: 'AI', content: data.response};
                 console.log("response", data.response);
-                if (safeInput.trim().length === 0) {
+                if (safeText.trim().length === 0) {
                     setMessages(messages => [...messages, { content: "Sorry, I don't see any text!", role: 'AI' }]);
                 }
                 else if (data.response === 'true') {
