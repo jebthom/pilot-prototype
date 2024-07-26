@@ -594,7 +594,7 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
   
     useEffect(() => {
         const initialMessage = {
-            content: 'Hi! I am your helpful writing assistant. I am here to help you complete a paragraph.',
+            content: 'Hi! I am Wordsworth, your helpful writing assistant. I am here to help you complete a paragraph.',
             role: 'AI'
         };
         const initialSystemMessage = {
@@ -704,7 +704,7 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
                 value={input}
                 onChange={handleInputChange}
                 className="chat-input"
-                placeholder='Chat with the Writing Assistant'
+                placeholder='Chat with Wordsworth'
             />
             <button onClick={handleSubmit}>Send</button>
         </div>
