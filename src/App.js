@@ -676,7 +676,14 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
             .catch(error => console.error('Error:', error));
         }
     };
-  
+    
+    const handleKeyDown = (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            handleSubmit();
+        }
+    };
+
     return (
         <div>
             <div className="chat-container" ref={chatContainerRef}>
@@ -703,6 +710,7 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
                 type="text"
                 value={input}
                 onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
                 className="chat-input"
                 placeholder='Chat with Wordsworth'
             />
