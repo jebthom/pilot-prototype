@@ -4,7 +4,7 @@
 .text-editor-container {
   display: flex;
   flex-direction: row;
-  height: 60vh;
+  height: 70vh;
   background-color: #fafafa; /* Soft background color */
   padding: 20px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Subtle shadow for depth */
@@ -41,6 +41,8 @@
 
 /* AI area with distinct styling */
 .ai-area {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   padding: 20px;
   border-left: 2px solid #ddd; /* Separation line */
@@ -100,15 +102,23 @@
   background-color: #ede7f6; /* Light purple for AI messages */
 }
 
-/* Chat input styling */
+/* Container for input and button */
+.input-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* This will push the button to the right */
+  margin-top: 10px;
+}
+
+/* Adjust chat input to fit in the container */
 .chat-input {
-  width: 90%;
-  margin-right: 10px;
+  flex-grow: 1;
+  margin-right: 10px; /* Add some space between input and button */
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #fff;
-  transition: border-color 0.2s; /* Smooth transition on focus */
+  transition: border-color 0.2s;
 }
 
 .chat-input:focus {
@@ -137,6 +147,19 @@
   background-color: #f0f0f0;
   border-radius: 5px;
   text-align: center;
+}
+
+/* Send button styling */
+.chat-button {
+  padding: 8px 16px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.chat-button:hover {
+  background-color: #e0e0e0;
 }
 
 @keyframes fadeToBlack {

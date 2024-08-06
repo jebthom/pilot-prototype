@@ -46,7 +46,7 @@ function TextEditor({ initialCondition }) {
     const [agentStartTime, setAgentStartTime] = useState(null);
     // writingPrompt should always end with a space so that the concatenation is correct
     const writingPrompt = "Choose an object from the list and include it in your story: a silver locket that refuses to open, a cracked compass that always points south, or a pocketwatch that runs backwards. ";
-    const framingText = "You have 5 minutes to use the application. Write a story based on the following prompt:   ";
+    const framingText = "You have 15 minutes to use the application. Write a story based on the following prompt:   ";
 
     useEffect(() => {
         if (text.trim() === "") {
@@ -79,7 +79,7 @@ function TextEditor({ initialCondition }) {
     const handleAutowrite = () => {
         if (isButtonDisabled) return; // Prevent function execution if the button is disabled
         disableButtonTemporarily(); // Disable the button temporarily
-        const startTime = performance.now();
+        // const startTime = performance.now();
         const safeText = DOMPurify.sanitize(text);
         const combinedText = `${safeText}`;
         if (safeText.trim().length === 0) {
@@ -112,7 +112,7 @@ function TextEditor({ initialCondition }) {
             }
         })
         .finally(() => {
-            const endTime = performance.now();  // Stop timing after the asynchronous operation completes
+            // const endTime = performance.now();  // Stop timing after the asynchronous operation completes
             // console.log(`handleAutowrite took ${endTime - startTime} milliseconds.`);
         })
         .catch(error => console.error('Error:', error));
@@ -134,7 +134,7 @@ function TextEditor({ initialCondition }) {
     const handleMagicWrite = () => {
         if (isButtonDisabled) return; // Prevent function execution if the button is disabled
         disableButtonTemporarily(); // Disable the button temporarily
-        const startTime = performance.now();
+        // const startTime = performance.now();
         const apiURL = 'https://pilot-prototype-31e1ca0e2a37.herokuapp.com/generate-text';
         // Need to use the innerText or else the checking for spacePrefix doesn't work reliably
         const editorText = editorRef.current ? editorRef.current.innerText : ""; // Directly use the current editor text
@@ -188,7 +188,7 @@ function TextEditor({ initialCondition }) {
 
         })
         .finally(() => {
-            const endTime = performance.now();  // Stop timing after the asynchronous operation completes
+            // const endTime = performance.now();  // Stop timing after the asynchronous operation completes
             // console.log(`handleMagicWrite took ${endTime - startTime} milliseconds.`);
         })
         .catch(error => console.error('Error:', error));
@@ -268,7 +268,7 @@ function TextEditor({ initialCondition }) {
 
     useEffect(() => {
         if (agentTypingCompleted && agentStartTime) {
-            const endTime = performance.now();
+            // const endTime = performance.now();
             // console.log(`Total processing time: ${endTime - agentStartTime} milliseconds.`);
             setAgentTypingCompleted(false);  // Reset for next usage
         }
@@ -286,7 +286,7 @@ function TextEditor({ initialCondition }) {
                     contentEditable
                     onInput={handleInput}
                     className="editor"
-                    data-placeholder="Continue typing here..."
+                    data-placeholder="Begin typing here..."
                 />
                 <div className='ai-area'>
                     {renderAIComponent(condition, handleAutowrite, handleMagicWrite, handleAgentWrite, text, isButtonDisabled, disableButtonTemporarily)}
@@ -655,7 +655,7 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
             })
             .then(response => response.json())
             .then(data => {
-                const assistantMessage = { role: 'AI', content: data.response};
+                // const assistantMessage = { role: 'AI', content: data.response};
                 console.log("response", data.response);
                 if (safeText.trim().length === 0 && data.response === 'false') {
                     setMessages(messages => [...messages, { content: "Sorry, right now I can only help complete your text. But it looks like you don't have any text!", role: 'AI' }]);
@@ -706,15 +706,17 @@ function ComponentForCondition3({ text, onAgentWrite, isDisabled, disableButton 
             <div onClick={handleSuggestionClick} className="chat-suggestion">
                 Please read my text and continue writing for me
             </div>
-            <input
-                type="text"
-                value={input}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                className="chat-input"
-                placeholder='Chat with Wordsworth'
-            />
-            <button onClick={handleSubmit}>Send</button>
+            <div className="input-container">
+                <input
+                    type="text"
+                    value={input}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    className="chat-input"
+                    placeholder='Chat with Wordsworth'
+                />
+                <button onClick={handleSubmit} className="chat-button">Send</button>
+            </div>
         </div>
     );
   }
