@@ -56,10 +56,28 @@ function TextEditor({ initialCondition }) {
         }
     }, [text]); // Empty dependency array to run only once on mount
 
+    useEffect(() => {
+        const handleKeyEvents = (e) => {
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                setText(editorRef.current.innerText);
+            }
+        };
+    
+        const editorElement = editorRef.current;
+        editorElement.addEventListener('keyup', handleKeyEvents);
+        editorElement.addEventListener('keydown', handleKeyEvents);
+    
+        return () => {
+            editorElement.removeEventListener('keyup', handleKeyEvents);
+            editorElement.removeEventListener('keydown', handleKeyEvents);
+        };
+    }, []);
+
     const handleInput = (e) => {
         if (!ignoreNextInput.current) {
-            setText(e.target.innerText);
-            if (e.target.innerText.trim() === "") {
+            const newText = e.target.innerText;
+            setText(newText);
+            if (newText.trim() === "") {
                 editorRef.current.classList.add("placeholder");
             } else {
                 editorRef.current.classList.remove("placeholder");
@@ -129,6 +147,7 @@ function TextEditor({ initialCondition }) {
             sel.removeAllRanges();
             sel.addRange(range);
         }
+        setText(el.innerText); // Update text state
     }
 
     const handleMagicWrite = () => {
