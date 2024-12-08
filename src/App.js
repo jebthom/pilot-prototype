@@ -6,22 +6,51 @@ import FSSparkles from './FSSparkles';
 import { ReactComponent as QuillIcon } from './assets/quill2.svg';
 import { ReactComponent as AIIcon } from './assets/ai.svg';
 import { ReactComponent as UserIcon } from './assets/user.svg';
+import ProlificModal from './ProlificModal';  
 import './App.css';
 
 function App() {
+    const [userId, setUserId] = useState(() => {
+      return localStorage.getItem('prolificId') || '';
+    });
+  
     return (
       <Router>
-        <Routes>
-          <Route path="/" element={<TextEditor initialCondition={null} />} />
-          <Route path="/condition1" element={<TextEditor initialCondition="condition1" />} />
-          <Route path="/condition2" element={<TextEditor initialCondition="condition2" />} />
-          <Route path="/condition3" element={<TextEditor initialCondition="condition3" />} />
-          <Route path="/condition4" element={<TextEditor initialCondition="condition4" />} />
-          <Route path="/condition5" element={<TextEditor initialCondition="condition5" />} />
-        </Routes>
+        <>
+          <ProlificModal 
+            isOpen={!userId} 
+            onSubmit={(id) => {
+              setUserId(id);
+              localStorage.setItem('prolificId', id);
+            }} 
+          />
+          {/* Display truncated ID in top corner */}
+          {userId && (
+            <div style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              padding: '0.5rem',
+              backgroundColor: '#f0f0f0',
+              borderRadius: '4px',
+              fontSize: '0.875rem',
+              color: '#666'
+            }}>
+              ID: {userId.slice(0, 4)}...{userId.slice(-4)}
+            </div>
+          )}
+          <Routes>
+            <Route path="/" element={<TextEditor initialCondition={null} userId={userId} />} />
+            <Route path="/condition1" element={<TextEditor initialCondition="condition1" userId={userId} />} />
+            <Route path="/condition2" element={<TextEditor initialCondition="condition2" userId={userId} />} />
+            <Route path="/condition3" element={<TextEditor initialCondition="condition3" userId={userId} />} />
+            <Route path="/condition4" element={<TextEditor initialCondition="condition4" userId={userId} />} />
+            <Route path="/condition5" element={<TextEditor initialCondition="condition5" userId={userId} />} />
+          </Routes>
+        </>
       </Router>
     );
-}
+  }
   
 export default App;
 
