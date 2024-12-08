@@ -55,7 +55,7 @@ function App() {
 export default App;
 
 
-function TextEditor({ initialCondition }) {
+function TextEditor({ initialCondition, userId }) {
     const [text, setText] = useState("");
     const editorRef = useRef(null);
     const ignoreNextInput = useRef(false);

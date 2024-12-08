@@ -2,6 +2,9 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from openai import OpenAI
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from datetime import datetime
 import os
 
 client = OpenAI(
@@ -10,6 +13,28 @@ client = OpenAI(
 
 app = Flask(__name__, static_folder='build', static_url_path='')
 CORS(app)
+
+# Database Configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize SQLAlchemy and Migrate
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+# Database Models
+class CompletionLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    userId = db.Column(db.String(50), nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    input_text = db.Column(db.Text, nullable=False)
+    response_text = db.Column(db.Text, nullable=False)
+
+class TextSnapshot(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    userId = db.Column(db.String(50), nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    text = db.Column(db.Text, nullable=False)
 
 @app.before_request
 def log_request():
