@@ -76,6 +76,7 @@ function TextEditor({ initialCondition, userId }) {
     // writingPrompt should always end with a space so that the concatenation is correct
     const writingPrompt = "Choose an object from the list and include it in your story: a silver locket that refuses to open, a cracked compass that always points south, or a pocketwatch that runs backwards. ";
     const framingText = "You have 15 minutes to use the application. Write a story based on the following prompt:   ";
+    const [snapshotCount, setSnapshotCount] = useState(0);
 
     useEffect(() => {
         if (text.trim() === "") {
@@ -103,11 +104,16 @@ function TextEditor({ initialCondition, userId }) {
     }, []);
 
     useEffect(() => {
-        // Only start the timer if we have a userId
-        if (!userId) return;
-
+        // Only start the timer if we have a userId and haven't reached 20 snapshots
+        if (!userId || snapshotCount >= 20) return;
+    
         const saveSnapshot = async () => {
             try {
+                // Don't save if we've reached 20 snapshots
+                if (snapshotCount >= 20) {
+                    return;
+                }
+    
                 const response = await fetch('https://pilot-prototype-31e1ca0e2a37.herokuapp.com/save-snapshot', {
                     method: 'POST',
                     headers: {
@@ -121,18 +127,21 @@ function TextEditor({ initialCondition, userId }) {
                 
                 if (!response.ok) {
                     console.error('Failed to save snapshot');
+                } else {
+                    // Increment snapshot count after successful save
+                    setSnapshotCount(prevCount => prevCount + 1);
                 }
             } catch (error) {
                 console.error('Error saving snapshot:', error);
             }
         };
-
+    
         // Set up the interval timer
         const intervalId = setInterval(saveSnapshot, 30000); // 30 seconds
-
+    
         // Cleanup function to clear the interval when the component unmounts
         return () => clearInterval(intervalId);
-    }, [userId, text]); // Dependencies array includes userId and text
+    }, [userId, text, snapshotCount]); // Added snapshotCount to dependencies
 
 
     const handleInput = (e) => {
