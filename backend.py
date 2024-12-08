@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from openai import OpenAI
@@ -16,7 +15,16 @@ def create_app():
     CORS(app)
 
     # Database Configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://')
+    # Get DATABASE_URL from environment, use SQLite as fallback for local development
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        # Heroku provides PostgreSQL URLs starting with postgres://, but SQLAlchemy needs postgresql://
+        database_url = database_url.replace('postgres://', 'postgresql://')
+    else:
+        # Local SQLite database
+        database_url = 'sqlite:///app.db'
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize SQLAlchemy and Migrate
