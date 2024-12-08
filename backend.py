@@ -80,13 +80,14 @@ def index():
 def generate_text():
     input_text = request.json['text']
     cursor_position = request.json['cursorPosition']
+    userId = request.json.get('userId', 'unknown')  # Default to 'unknown' if not provided
+    
     # Extract text up to the cursor position for context
     context_text = input_text[:cursor_position]
 
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            # model='llama3',
             messages=[
                 {"role": "system", "content": "Suggest a continuation for this prompt. Your reply should only be the continuation. The continuation should be grammatically correct and flow naturally from the prompt. The continuation should be paragraph-length."},
                 {"role": "user", "content": context_text}
@@ -94,8 +95,20 @@ def generate_text():
             max_tokens=250  # Limit the length of the suggestion
         )
         suggestion = response.choices[0].message.content.strip()
+        
+        # Log the completion to the database
+        completion_log = CompletionLog(
+            userId=userId,
+            input_text=context_text,
+            response_text=suggestion
+        )
+        db.session.add(completion_log)
+        db.session.commit()
+        
         return jsonify({'response': suggestion}), 200
     except Exception as e:
+        # Log errors but don't prevent the response
+        print(f"Error logging completion: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 

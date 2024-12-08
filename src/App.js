@@ -142,7 +142,8 @@ function TextEditor({ initialCondition, userId }) {
             },
             body: JSON.stringify({
                 text: combinedText,
-                cursorPosition: cursorPosition
+                cursorPosition: cursorPosition,
+                userId: userId
             })
         })
         .then(response => response.json())
@@ -202,7 +203,8 @@ function TextEditor({ initialCondition, userId }) {
             },
             body: JSON.stringify({
                 text: combinedText,
-                cursorPosition: cursorPosition
+                cursorPosition: cursorPosition,
+                userId: userId
             })
         })
         .then(response => response.json())
@@ -264,7 +266,8 @@ function TextEditor({ initialCondition, userId }) {
             },
             body: JSON.stringify({
                 text: combinedText,
-                cursorPosition: cursorPosition
+                cursorPosition: cursorPosition,
+                userId: userId
             })
         })
         .then(response => response.json())
