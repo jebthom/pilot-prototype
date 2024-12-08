@@ -11,16 +11,23 @@ client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY")
 )
 
-app = Flask(__name__, static_folder='build', static_url_path='')
-CORS(app)
+def create_app():
+    app = Flask(__name__, static_folder='build', static_url_path='')
+    CORS(app)
 
-# Database Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # Database Configuration
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize SQLAlchemy and Migrate
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+    # Initialize SQLAlchemy and Migrate
+    db.init_app(app)
+    migrate.init_app(app, db)
+
+    return app
+
+# Initialize extensions
+db = SQLAlchemy()
+migrate = Migrate()
 
 # Database Models
 class CompletionLog(db.Model):
@@ -35,6 +42,8 @@ class TextSnapshot(db.Model):
     userId = db.Column(db.String(50), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     text = db.Column(db.Text, nullable=False)
+
+app = create_app()
 
 @app.before_request
 def log_request():
