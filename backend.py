@@ -131,6 +131,26 @@ def generate_chat_no_text():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
+@app.route('/save-snapshot', methods=['POST'])
+def save_snapshot():
+    try:
+        data = request.json
+        user_id = data.get('userId', 'unknown')
+        text = data.get('text', '')
+        
+        # Create new snapshot
+        snapshot = TextSnapshot(
+            userId=user_id,
+            text=text
+        )
+        
+        db.session.add(snapshot)
+        db.session.commit()
+        
+        return jsonify({'status': 'success'}), 200
+    except Exception as e:
+        print(f"Error saving snapshot: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=False)

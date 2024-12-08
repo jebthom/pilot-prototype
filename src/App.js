@@ -102,6 +102,39 @@ function TextEditor({ initialCondition, userId }) {
         };
     }, []);
 
+    useEffect(() => {
+        // Only start the timer if we have a userId
+        if (!userId) return;
+
+        const saveSnapshot = async () => {
+            try {
+                const response = await fetch('https://pilot-prototype-31e1ca0e2a37.herokuapp.com/save-snapshot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        text: text
+                    })
+                });
+                
+                if (!response.ok) {
+                    console.error('Failed to save snapshot');
+                }
+            } catch (error) {
+                console.error('Error saving snapshot:', error);
+            }
+        };
+
+        // Set up the interval timer
+        const intervalId = setInterval(saveSnapshot, 30000); // 30 seconds
+
+        // Cleanup function to clear the interval when the component unmounts
+        return () => clearInterval(intervalId);
+    }, [userId, text]); // Dependencies array includes userId and text
+
+
     const handleInput = (e) => {
         if (!ignoreNextInput.current) {
             const newText = e.target.innerText;
