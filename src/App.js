@@ -81,6 +81,7 @@ function TextEditor({ initialCondition, userId }) {
         const saved = localStorage.getItem(`snapshot-count-${userId}`);
         return saved ? parseInt(saved, 10) : 0;
     });
+    const timerText = useRef('');
 
     useEffect(() => {
         if (text.trim() === "") {
@@ -107,24 +108,26 @@ function TextEditor({ initialCondition, userId }) {
         };
     }, []);
 
+    // Update ref whenever text changes
     useEffect(() => {
-        // Only start the timer if we have a userId
+        timerText.current = text;
+    }, [text]);
+
+    // Snapshot timer effect
+    useEffect(() => {
         if (!userId) return;
-    
-        // Debug logging
+
         console.log(`Setting up snapshot timer. Current count: ${snapshotCount}`);
-    
+
         const saveSnapshot = async () => {
-            // Debug logging
             console.log(`Attempting snapshot save. Count: ${snapshotCount}`);
-    
+
             try {
-                // Don't save if we've reached 120 snapshots
                 if (snapshotCount >= 120) {
                     console.log('Maximum snapshots reached, stopping timer');
                     return;
                 }
-    
+
                 const response = await fetch('https://pilot-prototype-31e1ca0e2a37.herokuapp.com/save-snapshot', {
                     method: 'POST',
                     headers: {
@@ -132,7 +135,7 @@ function TextEditor({ initialCondition, userId }) {
                     },
                     body: JSON.stringify({
                         userId: userId,
-                        text: text  // Will send empty string if no text
+                        text: timerText.current  // Using renamed ref
                     })
                 });
                 
@@ -140,37 +143,32 @@ function TextEditor({ initialCondition, userId }) {
                     console.error('Failed to save snapshot:', await response.text());
                     return;
                 }
-    
-                // Only increment count after confirmed success
+
                 const newCount = snapshotCount + 1;
                 setSnapshotCount(newCount);
-                // Persist count to localStorage
                 localStorage.setItem(`snapshot-count-${userId}`, newCount.toString());
                 console.log(`Snapshot saved successfully. New count: ${newCount}`);
             } catch (error) {
                 console.error('Error saving snapshot:', error);
             }
         };
-    
-        // Take an immediate snapshot if we haven't started yet
+
+        // Take an initial snapshot if we haven't started yet
         if (snapshotCount === 0) {
             console.log('Taking initial snapshot');
             saveSnapshot();
         }
-    
-        // Set up the interval timer - now 10 seconds instead of 30
+
+        // Set up the interval timer
         const intervalId = setInterval(saveSnapshot, 10000); // 10 seconds
-    
-        // Debug timer setup
         console.log(`Timer set up with ID: ${intervalId}`);
-    
-        // Cleanup function
+
         return () => {
             console.log(`Cleaning up timer ${intervalId}`);
             clearInterval(intervalId);
         };
-    }, [userId, text, snapshotCount]); // Dependencies
-    
+    }, [userId, snapshotCount]); // Removed text from dependencies
+        
     // Add this effect to persist snapshot count across page reloads
     useEffect(() => {
         // Update localStorage whenever snapshotCount changes
