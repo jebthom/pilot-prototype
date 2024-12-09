@@ -104,13 +104,13 @@ function TextEditor({ initialCondition, userId }) {
     }, []);
 
     useEffect(() => {
-        // Only start the timer if we have a userId and haven't reached 20 snapshots
-        if (!userId || snapshotCount >= 20) return;
+        // Only start the timer if we have a userId and haven't reached 60 snapshots
+        if (!userId || snapshotCount >= 60) return;
     
         const saveSnapshot = async () => {
             try {
-                // Don't save if we've reached 20 snapshots
-                if (snapshotCount >= 20) {
+                // Don't save if we've reached 60 snapshots
+                if (snapshotCount >= 60) {
                     return;
                 }
     
@@ -137,7 +137,7 @@ function TextEditor({ initialCondition, userId }) {
         };
     
         // Set up the interval timer
-        const intervalId = setInterval(saveSnapshot, 30000); // 30 seconds
+        const intervalId = setInterval(saveSnapshot, 10000); // 10 seconds
     
         // Cleanup function to clear the interval when the component unmounts
         return () => clearInterval(intervalId);
