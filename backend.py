@@ -133,28 +133,39 @@ def generate_chat_no_text():
     
 @app.route('/save-snapshot', methods=['POST'])
 def save_snapshot():
-    try:
-        data = request.json
-        user_id = data.get('userId', 'unknown')
-        text = data.get('text', '')
+    data = request.json
+    user_id = data.get('userId', 'unknown')
+    text = data.get('text', '')
+    max_retries = 3
+    retry_delay = 1  # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            snapshot = TextSnapshot(
+                userId=user_id,
+                text=text
+            )
+            
+            db.session.add(snapshot)
+            db.session.commit()
+            
+            print(f"Successfully saved snapshot for user {user_id} on attempt {attempt + 1}")
+            return jsonify({'status': 'success'}), 200
+            
+        except SQLAlchemyError as e:
+            print(f"Database error on attempt {attempt + 1} for user {user_id}: {str(e)}")
+            db.session.rollback()  # Reset the session
+            
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay)  # Wait before retrying
+                continue
+            else:
+                print(f"Failed to save snapshot after {max_retries} attempts")
+                return jsonify({'error': str(e)}), 500
         
-        print(f"Saving snapshot for user {user_id}, text length: {len(text)}")
-        
-        # Create new snapshot
-        snapshot = TextSnapshot(
-            userId=user_id,
-            text=text
-        )
-        
-        db.session.add(snapshot)
-        db.session.commit()
-        
-        print(f"Successfully saved snapshot for user {user_id}")
-        return jsonify({'status': 'success'}), 200
-    except Exception as e:
-        error_msg = str(e)
-        print(f"Error saving snapshot for user {data.get('userId', 'unknown')}: {error_msg}")
-        return jsonify({'error': error_msg}), 500
+        except Exception as e:
+            print(f"Unexpected error saving snapshot for user {user_id}: {str(e)}")
+            return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=False)
