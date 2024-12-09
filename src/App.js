@@ -160,7 +160,7 @@ function TextEditor({ initialCondition, userId }) {
         }
 
         // Set up the interval timer
-        const intervalId = setInterval(saveSnapshot, 10000); // 10 seconds
+        const intervalId = setInterval(saveSnapshot, 20000); // 20 seconds
         console.log(`Timer set up with ID: ${intervalId}`);
 
         return () => {
