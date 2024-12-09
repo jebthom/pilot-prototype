@@ -138,6 +138,8 @@ def save_snapshot():
         user_id = data.get('userId', 'unknown')
         text = data.get('text', '')
         
+        print(f"Saving snapshot for user {user_id}, text length: {len(text)}")
+        
         # Create new snapshot
         snapshot = TextSnapshot(
             userId=user_id,
@@ -147,10 +149,12 @@ def save_snapshot():
         db.session.add(snapshot)
         db.session.commit()
         
+        print(f"Successfully saved snapshot for user {user_id}")
         return jsonify({'status': 'success'}), 200
     except Exception as e:
-        print(f"Error saving snapshot: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        error_msg = str(e)
+        print(f"Error saving snapshot for user {data.get('userId', 'unknown')}: {error_msg}")
+        return jsonify({'error': error_msg}), 500
 
 if __name__ == '__main__':
     app.run(debug=False)

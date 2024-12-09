@@ -76,7 +76,11 @@ function TextEditor({ initialCondition, userId }) {
     // writingPrompt should always end with a space so that the concatenation is correct
     const writingPrompt = "Choose an object from the list and include it in your story: a silver locket that refuses to open, a cracked compass that always points south, or a pocketwatch that runs backwards. ";
     const framingText = "You have 15 minutes to use the application. Write a story based on the following prompt:   ";
-    const [snapshotCount, setSnapshotCount] = useState(0);
+    const [snapshotCount, setSnapshotCount] = useState(() => {
+        // Initialize from localStorage if available
+        const saved = localStorage.getItem(`snapshot-count-${userId}`);
+        return saved ? parseInt(saved, 10) : 0;
+    });
 
     useEffect(() => {
         if (text.trim() === "") {
@@ -104,13 +108,20 @@ function TextEditor({ initialCondition, userId }) {
     }, []);
 
     useEffect(() => {
-        // Only start the timer if we have a userId and haven't reached 60 snapshots
-        if (!userId || snapshotCount >= 60) return;
+        // Only start the timer if we have a userId
+        if (!userId) return;
+    
+        // Debug logging
+        console.log(`Setting up snapshot timer. Current count: ${snapshotCount}`);
     
         const saveSnapshot = async () => {
+            // Debug logging
+            console.log(`Attempting snapshot save. Count: ${snapshotCount}`);
+    
             try {
                 // Don't save if we've reached 60 snapshots
                 if (snapshotCount >= 60) {
+                    console.log('Maximum snapshots reached, stopping timer');
                     return;
                 }
     
@@ -121,27 +132,52 @@ function TextEditor({ initialCondition, userId }) {
                     },
                     body: JSON.stringify({
                         userId: userId,
-                        text: text
+                        text: text  // Will send empty string if no text
                     })
                 });
                 
                 if (!response.ok) {
-                    console.error('Failed to save snapshot');
-                } else {
-                    // Increment snapshot count after successful save
-                    setSnapshotCount(prevCount => prevCount + 1);
+                    console.error('Failed to save snapshot:', await response.text());
+                    return;
                 }
+    
+                // Only increment count after confirmed success
+                const newCount = snapshotCount + 1;
+                setSnapshotCount(newCount);
+                // Persist count to localStorage
+                localStorage.setItem(`snapshot-count-${userId}`, newCount.toString());
+                console.log(`Snapshot saved successfully. New count: ${newCount}`);
             } catch (error) {
                 console.error('Error saving snapshot:', error);
             }
         };
     
-        // Set up the interval timer
+        // Take an immediate snapshot if we haven't started yet
+        if (snapshotCount === 0) {
+            console.log('Taking initial snapshot');
+            saveSnapshot();
+        }
+    
+        // Set up the interval timer - now 10 seconds instead of 30
         const intervalId = setInterval(saveSnapshot, 10000); // 10 seconds
     
-        // Cleanup function to clear the interval when the component unmounts
-        return () => clearInterval(intervalId);
-    }, [userId, text, snapshotCount]); // Added snapshotCount to dependencies
+        // Debug timer setup
+        console.log(`Timer set up with ID: ${intervalId}`);
+    
+        // Cleanup function
+        return () => {
+            console.log(`Cleaning up timer ${intervalId}`);
+            clearInterval(intervalId);
+        };
+    }, [userId, text, snapshotCount]); // Dependencies
+    
+    // Add this effect to persist snapshot count across page reloads
+    useEffect(() => {
+        // Update localStorage whenever snapshotCount changes
+        if (userId) {
+            localStorage.setItem(`snapshot-count-${userId}`, snapshotCount.toString());
+        }
+    }, [snapshotCount, userId]);
 
 
     const handleInput = (e) => {
