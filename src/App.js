@@ -123,7 +123,7 @@ function TextEditor({ initialCondition, userId }) {
             console.log(`Attempting snapshot save. Count: ${snapshotCount}`);
 
             try {
-                if (snapshotCount >= 120) {
+                if (snapshotCount >= 180) {
                     console.log('Maximum snapshots reached, stopping timer');
                     return;
                 }
